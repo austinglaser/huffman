@@ -46,6 +46,8 @@ void print_usage(char * call);
 
 // strips the linefeed character (^M) from strings -- necessary because
 // getline() adds this to the end of every string returned
+// ACTUALLY: It doesn't, we were just reading from a file which
+// had windows-style newlines. So whoops...
 void strip_linefeed(string &line);
 
 int main(int argc, char * argv[]) {
