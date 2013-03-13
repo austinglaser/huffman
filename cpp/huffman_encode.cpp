@@ -10,6 +10,7 @@
 
 #define ENC_MODE 0
 #define DEC_MODE 1
+#define MAGIC_NUMBER 0x65717270 // "AGHF"
 
 using namespace std;
 
@@ -79,7 +80,7 @@ int main(int argc, char * argv[]) {
     // get the entire file in one string
     while (in_file.good()) {
       getline(in_file, line);
-      strip_linefeed(line);
+      //strip_linefeed(line);
 
       corpus_ss << line;
       if (in_file.good()) corpus_ss << endl;
@@ -94,6 +95,8 @@ int main(int argc, char * argv[]) {
     map<char, string> encodings = build_encoding_map(tree);
     string encoded_corpus = encode(corpus, encodings);
 
+    out_file << MAGIC_NUMBER << endl;
+
     // preserve huffman tree in new file
     out_file << tree_to_str(tree);
 
@@ -103,11 +106,30 @@ int main(int argc, char * argv[]) {
     out_file.close();
   }
   else if (mode == DEC_MODE) {
+    string mn_string;
+
+    // get the magic number
+    getline(in_file, mn_string);
+    //strip_linefeed(mn_string);
+
+    // conver to int
+    unsigned magic_number;
+    stringstream ss;
+    ss << mn_string;
+    ss >> magic_number;
+
+    // make sure it's correct
+    if (magic_number != MAGIC_NUMBER) {
+      cerr << "Error: You are likely trying to decompress a file of the wrong type." << endl;
+      print_usage(argv[0]);
+      return -1;
+    }
+
     string tree_string;
 
     // get the encoding tree
     getline(in_file, tree_string);
-    strip_linefeed(tree_string);
+    //strip_linefeed(tree_string);
 
     // parse it into a useful data structure
     freq_info* tree = str_to_tree(tree_string);
@@ -119,7 +141,7 @@ int main(int argc, char * argv[]) {
     while (in_file.good()) {
       string temp;
       getline(in_file, temp);
-      strip_linefeed(encoded_file_bin);
+      //strip_linefeed(encoded_file_bin);
 
       encoded_file_bin += temp;
       if (in_file.good()) encoded_file_bin += '\n';
